@@ -16,3 +16,4 @@
 # vendor/
 downloaded-packages
 .DS_Store
+go.sum
