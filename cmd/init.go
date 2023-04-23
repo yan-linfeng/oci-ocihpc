@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/oracle-quickstart/oci-ocihpc/stacks"
 	"github.com/oracle/oci-go-sdk/example/helpers"
 	"github.com/spf13/cobra"
 )
@@ -31,20 +32,21 @@ func init() {
 }
 
 func stackInit(stack string) {
-
-	configURL := fmt.Sprintf("https://raw.githubusercontent.com/oracle-quickstart/oci-ocihpc/master/stacks/%s/config.json", stack)
-	zipURL := fmt.Sprintf("https://github.com/oracle-quickstart/oci-ocihpc/raw/master/stacks/%s/%s.zip", stack, stack)
-
-	configFilePath := filepath.Join(getWd(), "config.json")
+	stackZipFile, err := stacks.ConfigFS.Open(fmt.Sprintf("%s/%s.zip", stack, stack))
+	helpers.FatalIfError(err)
+	defer stackZipFile.Close()
 
 	zipfile := stack + ".zip"
-	zipFilePath := filepath.Join(getWd(), zipfile)
+	stackZipErr := copyFile(stackZipFile, zipfile)
+	helpers.FatalIfError(stackZipErr)
 
-	errConfig := downloadFile(configFilePath, configURL)
-	helpers.FatalIfError(errConfig)
+	configFile, readConfigRrr := stacks.ConfigFS.Open(fmt.Sprintf("%s/config.zip", stack))
+	helpers.FatalIfError(readConfigRrr)
+	defer configFile.Close()
 
-	errZip := downloadFile(zipFilePath, zipURL)
-	helpers.FatalIfError(errZip)
+	configFilePath := filepath.Join(getWd(), "config.json")
+	configFileErr := copyFile(configFile, configFilePath)
+	helpers.FatalIfError(configFileErr)
 
 	fmt.Println("\n\nDownloaded stack " + stack)
 	fmt.Printf("\nIMPORTANT: Edit the contents of the %s file before running ocihpc deploy command\n\n", configFilePath)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/oracle-quickstart/oci-ocihpc/stacks"
 	"github.com/oracle/oci-go-sdk/example/helpers"
 )
 
@@ -102,6 +104,17 @@ func downloadFile(filepath string, url string) error {
 	return err
 }
 
+func copyFile(src fs.File, dest string) error {
+
+	out, err := os.Create(dest)
+	helpers.FatalIfError(err)
+
+	defer out.Close()
+
+	_, err = io.Copy(out, src)
+	return err
+}
+
 func getRandomNumber(n int) string {
 	numbers := []rune("0123456789")
 
@@ -142,25 +155,16 @@ func getConfirmation(prompt string) bool {
 }
 
 func getStackQuery(stack string, value string) string {
-	url := "https://raw.githubusercontent.com/oracle-quickstart/oci-ocihpc/master/stacks/stackQuery.json"
-	resp, err := http.Get(url)
+	stackQuery, err := stacks.ConfigFS.ReadFile("stackQuery.json")
+	helpers.FatalIfError(err)
+
+	m := make(map[string]interface{})
+	err = json.Unmarshal(stackQuery, &m)
 	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	dec := json.NewDecoder(resp.Body)
-	if dec == nil {
-		panic("Failed to start decoding JSON data")
+		panic("Failed to decoding JSON data")
 	}
 
-	json := make(map[string]interface{})
-	err = dec.Decode(&json)
-	if err != nil {
-		panic(err)
-	}
-
-	r := json[stack].(map[string]interface{})[value]
+	r := m[stack].(map[string]interface{})[value]
 	str := fmt.Sprint(r)
 	return (str)
 }
