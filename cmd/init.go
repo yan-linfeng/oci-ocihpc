@@ -40,7 +40,7 @@ func stackInit(stack string) {
 	stackZipErr := copyFile(stackZipFile, zipfile)
 	helpers.FatalIfError(stackZipErr)
 
-	configFile, readConfigRrr := stacks.ConfigFS.Open(fmt.Sprintf("%s/config.zip", stack))
+	configFile, readConfigRrr := stacks.ConfigFS.Open(fmt.Sprintf("%s/config.json", stack))
 	helpers.FatalIfError(readConfigRrr)
 	defer configFile.Close()
 
