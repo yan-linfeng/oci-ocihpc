@@ -17,6 +17,7 @@ Example command: ocihpc get ip
 	`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		localStackConfigPath, _ = cmd.Flags().GetString("f")
 
 		if _, err := os.Stat(".stackinfo.json"); err == nil {
 			if getStackIP() != "" {
@@ -35,4 +36,6 @@ Example command: ocihpc get ip
 
 func init() {
 	getCmd.AddCommand(ipCmd)
+
+	ipCmd.Flags().StringP("f", "f", "", "Local stack configuration file.")
 }
