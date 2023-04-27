@@ -3,7 +3,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/oracle-quickstart/oci-ocihpc/stacks"
@@ -20,7 +23,25 @@ Example command: ocihpc init --stack ClusterNetwork
 	Run: func(cmd *cobra.Command, args []string) {
 		stack, _ := cmd.Flags().GetString("stack")
 		fmt.Printf("\nDownloading stack %s...", stack)
-		stackInit(stack)
+
+		localStackConfigPath, _ := cmd.Flags().GetString("f")
+		if localStackConfigPath != "" {
+			localStackConfigFile, err := os.Open(localStackConfigPath)
+			helpers.FatalIfError(err)
+
+			defer localStackConfigFile.Close()
+
+			var localStackConfig map[string]any
+			if err := json.NewDecoder(localStackConfigFile).Decode(&localStackConfig); err != nil {
+				log.Fatal(err)
+			}
+
+			if _, isMapContainsKey := localStackConfig[stack]; isMapContainsKey {
+				stackInitFromLocalConfig(stack)
+			} else {
+				stackInit(stack)
+			}
+		}
 	},
 }
 
@@ -29,6 +50,8 @@ func init() {
 
 	initCmd.Flags().StringP("stack", "s", "", "Name of the stack you want to deploy.")
 	initCmd.MarkFlagRequired("stack")
+
+	initCmd.Flags().StringP("f", "f", "", "Local stack configuration file.")
 }
 
 func stackInit(stack string) {
@@ -41,6 +64,27 @@ func stackInit(stack string) {
 	helpers.FatalIfError(stackZipErr)
 
 	configFile, readConfigRrr := stacks.ConfigFS.Open(fmt.Sprintf("%s/config.json", stack))
+	helpers.FatalIfError(readConfigRrr)
+	defer configFile.Close()
+
+	configFilePath := filepath.Join(getWd(), "config.json")
+	configFileErr := copyFile(configFile, configFilePath)
+	helpers.FatalIfError(configFileErr)
+
+	fmt.Println("\n\nDownloaded stack " + stack)
+	fmt.Printf("\nIMPORTANT: Edit the contents of the %s file before running ocihpc deploy command\n\n", configFilePath)
+}
+
+func stackInitFromLocalConfig(stack string) {
+	stackZipFile, err := os.Open(fmt.Sprintf("%s/%s.zip", stack, stack))
+	helpers.FatalIfError(err)
+	defer stackZipFile.Close()
+
+	zipfile := stack + ".zip"
+	stackZipErr := copyFile(stackZipFile, zipfile)
+	helpers.FatalIfError(stackZipErr)
+
+	configFile, readConfigRrr := os.Open(fmt.Sprintf("%s/config.json", stack))
 	helpers.FatalIfError(readConfigRrr)
 	defer configFile.Close()
 

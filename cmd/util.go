@@ -155,6 +155,7 @@ func getConfirmation(prompt string) bool {
 }
 
 func getStackQuery(stack string, value string) string {
+
 	stackQuery, err := stacks.ConfigFS.ReadFile("stackQuery.json")
 	helpers.FatalIfError(err)
 
@@ -162,6 +163,21 @@ func getStackQuery(stack string, value string) string {
 	err = json.Unmarshal(stackQuery, &m)
 	if err != nil {
 		panic("Failed to decoding JSON data")
+	}
+
+	if localStackConfigPath != "" {
+		localStackConfigContent, err := os.ReadFile(localStackConfigPath)
+		helpers.FatalIfError(err)
+
+		localStackConfig := make(map[string]interface{})
+		err = json.Unmarshal(localStackConfigContent, &localStackConfig)
+		if err != nil {
+			panic("Failed to decoding JSON data")
+		}
+
+		for key, value := range localStackConfig {
+			m[key] = value
+		}
 	}
 
 	r := m[stack].(map[string]interface{})[value]

@@ -3,7 +3,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/oracle-quickstart/oci-ocihpc/stacks"
 	"github.com/oracle/oci-go-sdk/example/helpers"
@@ -18,15 +21,36 @@ Example command: ocihpc list
 	`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		catalog, err := stacks.ConfigFS.ReadFile("catalog")
+		localStackCatalogs := ""
+
+		localStackConfigPath, _ := cmd.Flags().GetString("f")
+
+		if localStackConfigPath != "" {
+			localStackConfigFile, err := os.Open(localStackConfigPath)
+			helpers.FatalIfError(err)
+
+			defer localStackConfigFile.Close()
+
+			var localStackConfig map[string]any
+			if err := json.NewDecoder(localStackConfigFile).Decode(&localStackConfig); err != nil {
+				log.Fatal(err)
+			}
+			for key := range localStackConfig {
+				localStackCatalogs += key + "\r\n"
+			}
+		}
+
+		defaultCatalogs, err := stacks.ConfigFS.ReadFile("catalog")
 		helpers.FatalIfError(err)
 
 		fmt.Printf("\nList of available stacks:\n\n")
-		fmt.Println(string(catalog))
+		fmt.Println(localStackCatalogs + string(defaultCatalogs))
 		fmt.Println()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+
+	listCmd.Flags().StringP("f", "f", "", "Local stack configuration file.")
 }

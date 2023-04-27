@@ -30,6 +30,7 @@ type Stack struct {
 }
 
 var s Stack
+var localStackConfigPath string
 
 var deployCmd = &cobra.Command{
 	Use:     "deploy",
@@ -40,6 +41,8 @@ Example command: ocihpc deploy --stack ClusterNetwork --node-count 2 --region us
 	`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		localStackConfigPath, _ = cmd.Flags().GetString("f")
+
 		stack, _ := cmd.Flags().GetString("stack")
 		s.SourceStackName = stack
 
@@ -92,6 +95,8 @@ func init() {
 	deployCmd.MarkFlagRequired("stack")
 
 	deployCmd.Flags().StringP("node-count", "n", "", "Number of nodes to deploy.")
+
+	deployCmd.Flags().StringP("f", "f", "", "Local stack configuration file.")
 }
 
 func createStack(ctx context.Context, provider common.ConfigurationProvider, client resourcemanager.ResourceManagerClient, compartment string, region string, stack string, nodeCount string) string {
