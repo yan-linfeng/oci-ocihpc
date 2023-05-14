@@ -17,3 +17,4 @@
 downloaded-packages
 .DS_Store
 go.sum
+.vscode/launch.json

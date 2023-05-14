@@ -9,7 +9,18 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${fileDirname}"
+            "program": "main.go",
+            // "args": ["delete","--stack","IntelWorkshop"]
+            "args": ["delete","--stack","HPC-Cluster","--cluster-name","env2"]
+            // "args": ["delete","--stack","HPC-Cluster"]
+
+            // "args": ["get","ip","--stack","HPC-Cluster"]
+            // "args": ["deploy","--stack","IntelWorkshop","--compartment-id","ocid1.compartment.oc1..aaaaaaaardb3dtrfgv5dde2rqisd44p3f6ihjtbd3gnbtwq64nq6lzngxotq"]
+            // "args": ["deploy","--stack","HPC-Cluster","-f","stackQuery.json","--cluster-name","env2","--compartment-id","ocid1.compartment.oc1..aaaaaaaardb3dtrfgv5dde2rqisd44p3f6ihjtbd3gnbtwq64nq6lzngxotq"]
+            // "args": ["init","--stack","HPC-Cluster","-f","stackQuery.json"]
+            // "args": ["list","-f","stackQuery.json"]
+            // "args": ["list"]
+            // "args": ["get","ip","--cluster-name","env1","-f","stackQuery.json"]
         }
     ]
 }

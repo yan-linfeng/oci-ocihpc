@@ -17,6 +17,10 @@ Example command: ocihpc get ip
 	`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		clusterNameArg, _ := cmd.Flags().GetString("cluster-name")
+		if clusterNameArg != "" {
+			clusterName = clusterNameArg
+		}
 		localStackConfigPath, _ = cmd.Flags().GetString("f")
 
 		if _, err := os.Stat(".stackinfo.json"); err == nil {
@@ -38,4 +42,6 @@ func init() {
 	getCmd.AddCommand(ipCmd)
 
 	ipCmd.Flags().StringP("f", "f", "", "Local stack configuration file.")
+	ipCmd.Flags().StringP("cluster-name", "", "", "Cluster name you want to specify.")
+
 }

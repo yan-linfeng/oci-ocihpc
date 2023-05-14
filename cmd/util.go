@@ -21,8 +21,17 @@ import (
 var filename = ".stackinfo.json"
 
 func addStackInfo(s Stack) {
+	var stackInfo map[string]Stack
+	if _, err := os.Stat(filename); err != nil {
+		stackInfo = map[string]Stack{clusterName: s}
+	} else {
+		content, err := ioutil.ReadFile(filename)
+		helpers.FatalIfError(err)
+		json.Unmarshal([]byte(content), &stackInfo)
+		stackInfo[clusterName] = s
+	}
 
-	file, _ := json.MarshalIndent(s, "", " ")
+	file, _ := json.MarshalIndent(stackInfo, "", " ")
 	_ = ioutil.WriteFile(filename, file, 0644)
 }
 
@@ -31,10 +40,10 @@ func getSourceStackName() string {
 	content, err := ioutil.ReadFile(filename)
 	helpers.FatalIfError(err)
 
-	var info Stack
+	var info map[string]Stack
 	json.Unmarshal([]byte(content), &info)
 
-	return info.SourceStackName
+	return info[clusterName].SourceStackName
 }
 
 func getDeployedStackName() string {
@@ -42,10 +51,10 @@ func getDeployedStackName() string {
 	content, err := ioutil.ReadFile(filename)
 	helpers.FatalIfError(err)
 
-	var info Stack
+	var info map[string]Stack
 	json.Unmarshal([]byte(content), &info)
 
-	return info.DeployedStackName
+	return info[clusterName].DeployedStackName
 }
 
 func getStackID() string {
@@ -53,10 +62,10 @@ func getStackID() string {
 	content, err := ioutil.ReadFile(filename)
 	helpers.FatalIfError(err)
 
-	var info Stack
+	var info map[string]Stack
 	json.Unmarshal([]byte(content), &info)
 
-	return info.StackID
+	return info[clusterName].StackID
 }
 
 func getStackIP() string {
@@ -64,10 +73,10 @@ func getStackIP() string {
 	content, err := ioutil.ReadFile(filename)
 	helpers.FatalIfError(err)
 
-	var info Stack
+	var info map[string]Stack
 	json.Unmarshal([]byte(content), &info)
 
-	return info.StackIP
+	return info[clusterName].StackIP
 }
 
 func getJobID() string {
@@ -75,10 +84,10 @@ func getJobID() string {
 	content, err := ioutil.ReadFile(filename)
 	helpers.FatalIfError(err)
 
-	var info Stack
+	var info map[string]Stack
 	json.Unmarshal([]byte(content), &info)
 
-	return info.JobID
+	return info[clusterName].JobID
 }
 
 func getWd() string {
@@ -183,4 +192,20 @@ func getStackQuery(stack string, value string) string {
 	r := m[stack].(map[string]interface{})[value]
 	str := fmt.Sprint(r)
 	return (str)
+}
+
+func removeStackInfo() {
+	content, err := ioutil.ReadFile(filename)
+	helpers.FatalIfError(err)
+
+	var info map[string]Stack
+	json.Unmarshal([]byte(content), &info)
+
+	delete(info, clusterName)
+
+	stackJson, err := json.Marshal(info)
+	helpers.FatalIfError(err)
+
+	err = os.WriteFile(filename, stackJson, 0644)
+	helpers.FatalIfError(err)
 }

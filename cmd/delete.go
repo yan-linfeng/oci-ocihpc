@@ -22,6 +22,10 @@ var deleteCmd = &cobra.Command{
 Example command: ocihpc delete --stack ClusterNetwork`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		clusterNameArg, _ := cmd.Flags().GetString("cluster-name")
+		if clusterNameArg != "" {
+			clusterName = clusterNameArg
+		}
 
 		if _, err := os.Stat(".stackinfo.json"); os.IsNotExist(err) || getStackID() == "" {
 			fmt.Printf("\nError: Couldn't find a deployed stack here. Please check if this is the correct location.\n\n")
@@ -46,6 +50,8 @@ func init() {
 
 	deleteCmd.Flags().StringP("stack", "s", "", "Stack to delete")
 	deleteCmd.MarkFlagRequired("stack")
+
+	deleteCmd.Flags().StringP("cluster-name", "", "", "Cluster name you want to specify.")
 }
 
 func deleteStack(ctx context.Context, stackID string, client resourcemanager.ResourceManagerClient, stack string) {
@@ -99,7 +105,7 @@ func createDestroyJob(ctx context.Context, provider common.ConfigurationProvider
 		if readResp.LifecycleState == "SUCCEEDED" {
 			deleteStack(ctx, stackID, client, stack)
 			fmt.Printf("\nDelete completed successfully\n")
-			os.Remove(".stackinfo.json")
+			removeStackInfo()
 			break
 		} else if readResp.LifecycleState == "FAILED" {
 			fmt.Printf("\nDeployment failed. You can run 'ocihpc get logs' to get the logs of the failed job\n")
